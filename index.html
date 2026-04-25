@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClinicGo — Book Trusted Doctors in Egypt</title>
+
+  <!-- Fonts (local — no internet needed) -->
+  <link rel="stylesheet" href="vendor/fonts.css" />
+
+  <!-- Tailwind CSS (local — no internet needed) -->
+  <script src="vendor/tailwind.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary:   '#1A65D6',
+            navy:      '#041740',
+            lightBlue: '#EEF5FF',
+            medBlue:   '#4D8EF0',
+            success:   '#10B981',
+            textDark:  '#1E293B',
+            textMuted: '#64748B',
+            bgLight:   '#F8FAFC',
+          },
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            sans: ['DM Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- React 18 (local — no internet needed) -->
+  <script src="vendor/react.js"></script>
+  <script src="vendor/react-dom.js"></script>
+
+  <!-- React Router DOM 6 dependencies — must load in this order -->
+  <script src="vendor/remix-router.js"></script>
+  <script src="vendor/react-router.js"></script>
+  <script src="vendor/react-router-dom.js"></script>
+
+  <!-- Babel Standalone for JSX (local — no internet needed) -->
+  <script src="vendor/babel.min.js"></script>
+
+  <!-- Catch any uncaught JS error and display it on the page -->
+  <script>
+    window.addEventListener('error', function (e) {
+      var box = document.getElementById('error-box');
+      if (!box) return;
+      box.style.display = 'block';
+      box.innerHTML = '<strong>JavaScript Error:</strong><br>' +
+                      (e.message || 'unknown') +
+                      '<br><small>' + (e.filename || '') +
+                      (e.lineno ? ':' + e.lineno : '') + '</small>';
+    });
+  </script>
+</head>
+<body>
+  <!-- Initial loading state — React replaces this with the app -->
+  <div id="root">
+    <div style="font-family: -apple-system, sans-serif; padding: 4rem 2rem; text-align: center; color: #64748B;">
+      <div style="font-size: 1.5rem; font-weight: 600; color: #1A65D6; margin-bottom: 0.5rem;">ClinicGo</div>
+      <div style="font-size: 0.9rem;">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Error display (hidden until an error occurs) -->
+  <div id="error-box" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fee;color:#900;padding:1rem;font-family:monospace;font-size:0.85rem;z-index:9999;border-top:2px solid #f00;"></div>
+
+  <!-- 1. Data (plain JS — must load before components) -->
+  <script src="src/data.js"></script>
+
+  <!-- 2. Shared components -->
+  <script type="text/babel" src="src/components/Navbar.js"></script>
+  <script type="text/babel" src="src/components/Footer.js"></script>
+  <script type="text/babel" src="src/components/DoctorCard.js"></script>
+
+  <!-- 3. Page components -->
+  <script type="text/babel" src="src/pages/Home.js"></script>
+  <script type="text/babel" src="src/pages/Search.js"></script>
+  <script type="text/babel" src="src/pages/DoctorProfile.js"></script>
+  <script type="text/babel" src="src/pages/Login.js"></script>
+  <script type="text/babel" src="src/pages/Register.js"></script>
+
+  <!-- 4. App entry point (routing + mount) — must be last -->
+  <script type="text/babel" src="src/App.js"></script>
+</body>
+</html>

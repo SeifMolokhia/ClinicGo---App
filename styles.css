@@ -1,0 +1,153 @@
+/* ============================================================
+   ClinicGo — Custom Styles
+   Tailwind utility classes cover most styling; this file
+   adds reusable component classes and global resets.
+   ============================================================ */
+
+/* Global reset / base */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: #1E293B;
+  background: #fff;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', sans-serif;
+}
+
+/* ── Reusable button components ───────────────────────────── */
+.btn-primary {
+  display: inline-block;
+  background-color: #1A65D6;
+  color: #fff;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  text-decoration: none;
+  text-align: center;
+}
+.btn-primary:hover {
+  background-color: #1557b8;
+  box-shadow: 0 8px 20px -4px rgba(26,101,214,0.35);
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  display: inline-block;
+  background-color: transparent;
+  color: #1A65D6;
+  padding: 0.6rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid #1A65D6;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.1s;
+  text-decoration: none;
+  text-align: center;
+}
+.btn-outline:hover {
+  background-color: #1A65D6;
+  color: #fff;
+}
+.btn-outline:active { transform: scale(0.97); }
+
+/* ── Card ─────────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid #e8edf2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -8px rgba(26,101,214,0.15);
+  border-color: rgba(26,101,214,0.3);
+}
+
+/* ── Form inputs ──────────────────────────────────────────── */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #1E293B;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.input-field:focus {
+  border-color: #1A65D6;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26,101,214,0.12);
+}
+.input-field.error {
+  border-color: #f87171;
+}
+.input-field.error:focus {
+  box-shadow: 0 0 0 3px rgba(248,113,113,0.15);
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ── Field error text ─────────────────────────────────────── */
+.field-error {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+  font-weight: 500;
+}
+
+/* ── Star rating ──────────────────────────────────────────── */
+.star { color: #F59E0B; }
+.star-empty { color: #e2e8f0; }
