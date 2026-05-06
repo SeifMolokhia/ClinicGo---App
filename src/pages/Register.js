@@ -25,6 +25,7 @@ function Register() {
   });
   const [errors,  setErrors]  = useRegisterState({});
   const [loading, setLoading] = useRegisterState(false);
+  const [serverError, setServerError] = useRegisterState('');
 
   const validate = () => {
     const e = {};
@@ -62,10 +63,21 @@ function Register() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    setServerError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setLoading(false);
-    navigate('/');
+    try {
+      await window.api.register({
+        name: form.fullName,
+        email: form.email,
+        password: form.password,
+        mobile: form.mobile,
+      });
+      navigate('/');
+    } catch (err) {
+      setServerError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,6 +98,15 @@ function Register() {
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
+
+            {/* Server-side error */}
+            {serverError && (
+              <div className="rounded-xl px-4 py-3 text-sm font-medium"
+                style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c' }}>
+                {serverError}
+              </div>
+            )}
+
             {FIELDS.map(({ name, label, type, placeholder }) => (
               <div key={name}>
                 <label className="block text-sm font-semibold text-textDark mb-1.5">{label}</label>

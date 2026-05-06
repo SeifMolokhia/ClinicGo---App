@@ -1,16 +1,32 @@
 // ============================================================
 // Navbar Component
 // Sticky top navigation with logo, links, and mobile menu.
-// Uses ReactRouterDOM globals (Link, NavLink).
+// Reads auth state from window.api and listens for the
+// "auth-changed" event so login/logout updates the UI live.
 // ============================================================
 
-const { useState } = React;
-const { Link, NavLink } = ReactRouterDOM;
+const { useState, useEffect } = React;
+const { Link, NavLink, useNavigate } = ReactRouterDOM;
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user,     setUser]     = useState(window.api ? window.api.getUser() : null);
+  const navigate = useNavigate();
 
   const close = () => setMenuOpen(false);
+
+  // Re-render when login/logout happens
+  useEffect(() => {
+    const update = () => setUser(window.api.getUser());
+    window.addEventListener('auth-changed', update);
+    return () => window.removeEventListener('auth-changed', update);
+  }, []);
+
+  const handleLogout = () => {
+    window.api.logout();
+    close();
+    navigate('/');
+  };
 
   const navLinkClass = ({ isActive }) =>
     'font-medium transition-colors ' +
@@ -39,14 +55,32 @@ function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
-            <NavLink to="/"       end className={navLinkClass}>Home</NavLink>
-            <NavLink to="/search"     className={navLinkClass}>Find Doctors</NavLink>
+            <NavLink to="/"            end className={navLinkClass}>Home</NavLink>
+            <NavLink to="/search"          className={navLinkClass}>Find Doctors</NavLink>
+            {user && <NavLink to="/appointments" className={navLinkClass}>My Appointments</NavLink>}
           </div>
 
           {/* Desktop right actions */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link to="/login"    className="text-textMuted text-sm font-medium hover:text-primary transition-colors">Sign in</Link>
-            <Link to="/register" className="btn-primary text-sm py-2 px-5">Get Started</Link>
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm font-medium text-textDark">
+                  Hi, {user.name.split(' ')[0]}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-textMuted text-sm font-medium hover:text-primary transition-colors"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login"    className="text-textMuted text-sm font-medium hover:text-primary transition-colors">Sign in</Link>
+                <Link to="/register" className="btn-primary text-sm py-2 px-5">Get Started</Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -73,9 +107,25 @@ function Navbar() {
         <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-5 pt-3 space-y-1">
           <NavLink to="/"       end className={mobileNavLinkClass} onClick={close}>Home</NavLink>
           <NavLink to="/search"     className={mobileNavLinkClass} onClick={close}>Find Doctors</NavLink>
+          {user && <NavLink to="/appointments" className={mobileNavLinkClass} onClick={close}>My Appointments</NavLink>}
           <div className="pt-3 mt-2 border-t border-gray-100 flex flex-col gap-2">
-            <Link to="/login"    onClick={close} className="text-center py-2.5 text-textMuted font-medium hover:text-primary text-sm">Sign in</Link>
-            <Link to="/register" onClick={close} className="btn-primary text-sm text-center">Get Started</Link>
+            {user ? (
+              <>
+                <p className="text-center text-xs text-textMuted">Signed in as <strong>{user.email}</strong></p>
+                <button
+                  onClick={handleLogout}
+                  className="btn-outline text-sm text-center"
+                  style={{ width: '100%' }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login"    onClick={close} className="text-center py-2.5 text-textMuted font-medium hover:text-primary text-sm">Sign in</Link>
+                <Link to="/register" onClick={close} className="btn-primary text-sm text-center">Get Started</Link>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -26,7 +26,7 @@ function StarRating({ rating }) {
 
 function DoctorCard({ doctor }) {
   return (
-    <CardLink to={`/doctor/${doctor.id}`} className="card p-5">
+    <CardLink to={`/doctor/${doctor._id || doctor.id}`} className="card p-5">
 
       {/* Header: avatar + core info */}
       <div className="flex items-start gap-4">

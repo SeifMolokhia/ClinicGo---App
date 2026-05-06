@@ -35,16 +35,23 @@ function Login() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
+  const [serverError, setServerError] = useLoginState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    setServerError('');
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1400));
-    setLoading(false);
-    navigate('/');
+    try {
+      await window.api.login(form.email, form.password);
+      navigate('/');
+    } catch (err) {
+      setServerError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,6 +72,14 @@ function Login() {
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
+
+            {/* Server-side error */}
+            {serverError && (
+              <div className="rounded-xl px-4 py-3 text-sm font-medium"
+                style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c' }}>
+                {serverError}
+              </div>
+            )}
 
             {/* Email */}
             <div>
@@ -119,6 +134,14 @@ function Login() {
             Don't have an account?{' '}
             <LoginLink to="/register" className="text-primary font-bold hover:underline">Create one</LoginLink>
           </p>
+
+          {/* Demo accounts hint */}
+          <div className="mt-4 rounded-xl p-3 text-xs leading-relaxed"
+            style={{ background: '#f1f5f9', color: '#64748b' }}>
+            <strong>Demo accounts:</strong><br />
+            patient@clinicgo.com / patient123<br />
+            admin@clinicgo.com / admin123
+          </div>
         </div>
       </div>
     </div>

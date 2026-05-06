@@ -4,7 +4,7 @@
 // time-slot booking flow with confirmation feedback.
 // ============================================================
 
-const { useState: useProfileState } = React;
+const { useState: useProfileState, useEffect: useProfileEffect } = React;
 const { useParams, useNavigate: useProfileNavigate } = ReactRouterDOM;
 
 const ALL_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -25,18 +25,41 @@ function ProfileStars({ rating }) {
 function DoctorProfile() {
   const { id }    = useParams();
   const navigate  = useProfileNavigate();
-  const doctor    = window.DOCTORS.find((d) => d.id === Number(id));
 
+  const [doctor,    setDoctor]    = useProfileState(null);
+  const [loading,   setLoading]   = useProfileState(true);
+  const [loadError, setLoadError] = useProfileState('');
   const [showSlots, setShowSlots] = useProfileState(false);
   const [selected,  setSelected]  = useProfileState(null);
   const [confirmed, setConfirmed] = useProfileState(false);
+  const [bookingError, setBookingError] = useProfileState('');
+  const [bookingLoading, setBookingLoading] = useProfileState(false);
 
-  if (!doctor) {
+  // Fetch doctor by id from the backend
+  useProfileEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    window.api.get('/doctors/' + id)
+      .then((data) => { if (!cancelled) setDoctor(data.doctor); })
+      .catch((err) => { if (!cancelled) setLoadError(err.message); })
+      .finally(()  => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bgLight">
+        <div className="text-textMuted">Loading doctor…</div>
+      </div>
+    );
+  }
+
+  if (loadError || !doctor) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bgLight">
         <div className="text-center">
           <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>😕</div>
-          <h2 className="font-sora font-bold text-2xl text-textDark mb-2">Doctor not found</h2>
+          <h2 className="font-sora font-bold text-2xl text-textDark mb-2">{loadError || 'Doctor not found'}</h2>
           <p className="text-textMuted mb-6 text-sm">The profile you're looking for doesn't exist.</p>
           <button onClick={() => navigate('/search')} className="btn-primary">Back to Search</button>
         </div>
@@ -44,10 +67,34 @@ function DoctorProfile() {
     );
   }
 
-  const handleConfirm = () => {
+  // Books the appointment via the backend.
+  // Requires login — redirects to /login if no token.
+  const handleConfirm = async () => {
     if (!selected) return;
-    setConfirmed(true);
-    setShowSlots(false);
+    if (!window.api.isLoggedIn()) {
+      navigate('/login');
+      return;
+    }
+    setBookingError('');
+    setBookingLoading(true);
+    try {
+      // Book for tomorrow as a sensible default (backend rejects past dates)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dateStr = tomorrow.toISOString().split('T')[0];
+
+      await window.api.post('/appointments', {
+        doctorId: doctor._id,
+        date: dateStr,
+        timeSlot: selected,
+      });
+      setConfirmed(true);
+      setShowSlots(false);
+    } catch (err) {
+      setBookingError(err.message || 'Booking failed');
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
@@ -233,13 +280,21 @@ function DoctorProfile() {
                     ))}
                   </div>
 
+                  {bookingError && (
+                    <div className="mt-3 rounded-xl px-3 py-2 text-xs font-medium"
+                      style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c' }}>
+                      {bookingError}
+                    </div>
+                  )}
+
                   {selected && (
                     <button
                       onClick={handleConfirm}
-                      className="w-full mt-4 text-white font-bold py-3 rounded-full text-sm"
-                      style={{ background: '#10B981', border: 'none', cursor: 'pointer' }}
+                      disabled={bookingLoading}
+                      className="w-full mt-4 text-white font-bold py-3 rounded-full text-sm flex items-center justify-center gap-2"
+                      style={{ background: '#10B981', border: 'none', cursor: 'pointer', opacity: bookingLoading ? 0.7 : 1 }}
                     >
-                      Confirm Booking
+                      {bookingLoading ? <><span className="spinner" /> Booking…</> : 'Confirm Booking'}
                     </button>
                   )}
                 </div>

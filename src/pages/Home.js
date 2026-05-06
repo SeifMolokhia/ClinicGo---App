@@ -4,7 +4,7 @@
 //           How It Works, CTA Banner
 // ============================================================
 
-const { useState: useHomeState } = React;
+const { useState: useHomeState, useEffect: useHomeEffect } = React;
 const { Link: HomeLink, useNavigate: useHomeNavigate } = ReactRouterDOM;
 
 const HOME_SPECIALTIES = [
@@ -33,9 +33,18 @@ const STEPS = [
 
 function Home() {
   const [query, setQuery] = useHomeState('');
+  const [topDoctors, setTopDoctors] = useHomeState([]);
+  const [loadError, setLoadError] = useHomeState('');
   const navigate = useHomeNavigate();
 
-  const topDoctors = window.DOCTORS.slice(0, 6);
+  // Fetch top 6 doctors (sorted by rating) from the backend
+  useHomeEffect(() => {
+    let cancelled = false;
+    window.api.get('/doctors?sort=rating&limit=6')
+      .then((data) => { if (!cancelled) setTopDoctors(data.doctors || []); })
+      .catch((err) => { if (!cancelled) setLoadError(err.message); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -136,11 +145,20 @@ function Home() {
             <HomeLink to="/search" className="btn-outline text-sm hidden md:block">View All →</HomeLink>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {topDoctors.map((doc) => (
-              <DoctorCard key={doc.id} doctor={doc} />
-            ))}
-          </div>
+          {loadError ? (
+            <div className="text-center py-12 text-textMuted">
+              <p className="mb-2">⚠️ {loadError}</p>
+              <p className="text-xs">Make sure the backend is running on port 4000.</p>
+            </div>
+          ) : topDoctors.length === 0 ? (
+            <div className="text-center py-12 text-textMuted">Loading doctors…</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {topDoctors.map((doc) => (
+                <DoctorCard key={doc._id} doctor={doc} />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-8 md:hidden">
             <HomeLink to="/search" className="btn-outline">View All Doctors</HomeLink>

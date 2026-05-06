@@ -18,11 +18,12 @@ function App() {
 
         <main style={{ flex: 1 }}>
           <Routes>
-            <Route path="/"           element={<Home />} />
-            <Route path="/search"     element={<Search />} />
-            <Route path="/doctor/:id" element={<DoctorProfile />} />
-            <Route path="/login"      element={<Login />} />
-            <Route path="/register"   element={<Register />} />
+            <Route path="/"             element={<Home />} />
+            <Route path="/search"       element={<Search />} />
+            <Route path="/doctor/:id"   element={<DoctorProfile />} />
+            <Route path="/login"        element={<Login />} />
+            <Route path="/register"     element={<Register />} />
+            <Route path="/appointments" element={<MyAppointments />} />
           </Routes>
         </main>
 

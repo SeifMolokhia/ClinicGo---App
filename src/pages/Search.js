@@ -15,6 +15,10 @@ function Search() {
   const [location,  setLocation]  = useSearchState('All Locations');
   const [sort,      setSort]      = useSearchState('rating');
 
+  const [filtered,  setFiltered]  = useSearchState([]);
+  const [loading,   setLoading]   = useSearchState(true);
+  const [loadError, setLoadError] = useSearchState('');
+
   // Resolve specialty from URL (e.g. ?specialty=Cardiology from Home page)
   useSearchEffect(() => {
     const raw = searchParams.get('specialty');
@@ -24,28 +28,26 @@ function Search() {
     }
   }, [searchParams]);
 
-  const filtered = window.DOCTORS
-    .filter((d) => {
-      const matchQ = !query ||
-        d.name.toLowerCase().includes(query.toLowerCase()) ||
-        d.specialty.toLowerCase().includes(query.toLowerCase());
+  // Fetch doctors from the backend whenever filters change
+  useSearchEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
 
-      const matchS = specialty === 'All Specialties' || d.specialty === specialty;
+    const params = new URLSearchParams();
+    if (query)                              params.set('q', query);
+    if (specialty !== 'All Specialties')    params.set('specialty', specialty);
+    if (location  !== 'All Locations')      params.set('location', location);
+    if (sort)                               params.set('sort', sort);
+    params.set('limit', '50');
 
-      const matchL = location === 'All Locations' ||
-        d.location === location ||
-        (location === 'Cairo'       && d.location.endsWith(', Cairo')) ||
-        (location === 'Alexandria'  && d.location.endsWith(', Alexandria'));
+    window.api.get('/doctors?' + params.toString())
+      .then((data) => { if (!cancelled) setFiltered(data.doctors || []); })
+      .catch((err) => { if (!cancelled) setLoadError(err.message); })
+      .finally(()  => { if (!cancelled) setLoading(false); });
 
-      return matchQ && matchS && matchL;
-    })
-    .sort((a, b) => {
-      if (sort === 'rating')     return b.rating - a.rating;
-      if (sort === 'fee-low')    return a.fee - b.fee;
-      if (sort === 'fee-high')   return b.fee - a.fee;
-      if (sort === 'experience') return b.experience - a.experience;
-      return 0;
-    });
+    return () => { cancelled = true; };
+  }, [query, specialty, location, sort]);
 
   const clearFilters = () => {
     setQuery('');
@@ -62,7 +64,7 @@ function Search() {
         <div className="max-w-6xl mx-auto">
           <h1 className="font-sora font-bold text-2xl sm:text-3xl text-textDark mb-1">Find a Doctor</h1>
           <p className="text-textMuted text-sm">
-            {filtered.length} doctor{filtered.length !== 1 ? 's' : ''} found
+            {loading ? 'Searching…' : `${filtered.length} doctor${filtered.length !== 1 ? 's' : ''} found`}
           </p>
         </div>
       </div>
@@ -111,10 +113,18 @@ function Search() {
         </div>
 
         {/* Results */}
-        {filtered.length > 0 ? (
+        {loadError ? (
+          <div className="text-center py-28">
+            <div style={{ fontSize: '3.5rem', marginBottom: '1.25rem' }}>⚠️</div>
+            <h3 className="font-sora font-bold text-xl text-textDark mb-2">{loadError}</h3>
+            <p className="text-textMuted text-sm">Make sure the backend is running on port 4000.</p>
+          </div>
+        ) : loading ? (
+          <div className="text-center py-28 text-textMuted">Loading doctors…</div>
+        ) : filtered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((doc) => (
-              <DoctorCard key={doc.id} doctor={doc} />
+              <DoctorCard key={doc._id} doctor={doc} />
             ))}
           </div>
         ) : (
