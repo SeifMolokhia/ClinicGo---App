@@ -34,6 +34,11 @@ const appointmentSchema = new mongoose.Schema({
     default: 'booked',
     index: true,
   },
+  mode: {
+    type: String,
+    enum: ['in-person', 'teleconsultation'],
+    default: 'in-person',
+  },
   notes: {
     type: String,
     trim: true,

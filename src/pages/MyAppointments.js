@@ -119,9 +119,26 @@ function MyAppointments() {
                   {apt.doctor && (
                     <p className="text-primary text-sm font-medium">{apt.doctor.specialty}</p>
                   )}
-                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-textMuted">
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-textMuted items-center">
                     <span>📅 {formatDate(apt.date)}</span>
                     <span>🕒 {apt.timeSlot}</span>
+                    {apt.mode === 'teleconsultation' ? (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.15rem 0.5rem', borderRadius: '9999px',
+                        background: '#EEF5FF', color: '#1A65D6', fontWeight: 600,
+                      }}>
+                        💻 Teleconsultation
+                      </span>
+                    ) : (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.15rem 0.5rem', borderRadius: '9999px',
+                        background: '#f1f5f9', color: '#475569', fontWeight: 600,
+                      }}>
+                        🏥 In-person
+                      </span>
+                    )}
                     {apt.doctor && <span>📍 {apt.doctor.location}</span>}
                     {apt.doctor && <span>EGP {apt.doctor.fee}</span>}
                   </div>

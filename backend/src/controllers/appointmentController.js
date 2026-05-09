@@ -10,7 +10,7 @@ const asyncHandler = require('../utils/asyncHandler');
 // POST /api/appointments
 // Body: { doctorId, date (ISO string), timeSlot, notes? }
 exports.book = asyncHandler(async (req, res) => {
-  const { doctorId, date, timeSlot, notes } = req.body;
+  const { doctorId, date, timeSlot, notes, mode } = req.body;
 
   if (!doctorId || !date || !timeSlot) {
     return res.status(400).json({ error: 'doctorId, date, and timeSlot are required' });
@@ -37,6 +37,7 @@ exports.book = asyncHandler(async (req, res) => {
       date,
       timeSlot,
       notes,
+      mode,
     });
     // Populate doctor details for the response
     await appointment.populate('doctor', 'name specialty location fee image');

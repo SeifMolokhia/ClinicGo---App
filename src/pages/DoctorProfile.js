@@ -31,6 +31,8 @@ function DoctorProfile() {
   const [loadError, setLoadError] = useProfileState('');
   const [showSlots, setShowSlots] = useProfileState(false);
   const [selected,  setSelected]  = useProfileState(null);
+  const [selectedDate, setSelectedDate] = useProfileState(null);
+  const [mode,      setMode]      = useProfileState('in-person');
   const [confirmed, setConfirmed] = useProfileState(false);
   const [bookingError, setBookingError] = useProfileState('');
   const [bookingLoading, setBookingLoading] = useProfileState(false);
@@ -67,10 +69,29 @@ function DoctorProfile() {
     );
   }
 
+  // Build the next 14 days; disable any whose weekday isn't in the doctor's availability list.
+  const upcomingDays = (() => {
+    const out = [];
+    const today = new Date();
+    for (let i = 1; i <= 14; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const weekday = ALL_DAYS[d.getDay()];
+      out.push({
+        iso: d.toISOString().split('T')[0],
+        weekday,
+        day: d.getDate(),
+        month: d.toLocaleDateString('en-US', { month: 'short' }),
+        available: doctor.availability.includes(weekday),
+      });
+    }
+    return out;
+  })();
+
   // Books the appointment via the backend.
   // Requires login — redirects to /login if no token.
   const handleConfirm = async () => {
-    if (!selected) return;
+    if (!selected || !selectedDate) return;
     if (!window.api.isLoggedIn()) {
       navigate('/login');
       return;
@@ -78,15 +99,11 @@ function DoctorProfile() {
     setBookingError('');
     setBookingLoading(true);
     try {
-      // Book for tomorrow as a sensible default (backend rejects past dates)
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dateStr = tomorrow.toISOString().split('T')[0];
-
       await window.api.post('/appointments', {
         doctorId: doctor._id,
-        date: dateStr,
+        date: selectedDate,
         timeSlot: selected,
+        mode,
       });
       setConfirmed(true);
       setShowSlots(false);
@@ -107,7 +124,7 @@ function DoctorProfile() {
             <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            Appointment confirmed with {doctor.name} at {selected}!
+            {mode === 'teleconsultation' ? 'Teleconsultation' : 'Appointment'} confirmed with {doctor.name} on {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : ''} at {selected}!
           </div>
         </div>
       )}
@@ -237,27 +254,99 @@ function DoctorProfile() {
                 </div>
               </div>
 
-              {/* Book / confirmed */}
               {confirmed ? (
                 <div className="w-full text-white text-center font-semibold py-3 rounded-full mb-3 text-sm"
                   style={{ background: '#10B981' }}>
                   ✓ Appointment Booked!
                 </div>
+              ) : showSlots ? (
+                <button
+                  onClick={() => setShowSlots(false)}
+                  className="btn-outline w-full mb-3 text-sm"
+                >
+                  Hide Booking
+                </button>
               ) : (
                 <button
-                  onClick={() => setShowSlots(!showSlots)}
+                  onClick={() => setShowSlots(true)}
                   className="btn-primary w-full mb-3"
                 >
-                  {showSlots ? 'Hide Time Slots' : 'Book Appointment'}
+                  Book Appointment
                 </button>
               )}
 
-              <button className="btn-outline w-full text-sm">Teleconsultation</button>
-
-              {/* Time slot picker */}
+              {/* Booking flow: mode → day → time → confirm */}
               {showSlots && !confirmed && (
                 <div className="mt-6 pt-6 border-t border-gray-100">
-                  <h3 className="font-sora font-semibold text-textDark text-sm mb-4">Select a Time Slot</h3>
+
+                  {/* Mode toggle */}
+                  <h3 className="font-sora font-semibold text-textDark text-sm mb-2">Visit Type</h3>
+                  <div className="grid grid-cols-2 gap-2 mb-5">
+                    {[
+                      { value: 'in-person',       label: 'In-person',       icon: '🏥' },
+                      { value: 'teleconsultation', label: 'Teleconsultation', icon: '💻' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setMode(opt.value)}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.6rem 0.5rem',
+                          borderRadius: '0.75rem',
+                          border: mode === opt.value ? '2px solid #1A65D6' : '1.5px solid #e2e8f0',
+                          background: mode === opt.value ? '#EEF5FF' : '#fff',
+                          color: mode === opt.value ? '#1A65D6' : '#64748b',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <span style={{ marginRight: 4 }}>{opt.icon}</span>{opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Date picker — horizontal strip */}
+                  <h3 className="font-sora font-semibold text-textDark text-sm mb-2">Select a Day</h3>
+                  <div
+                    className="flex gap-2 mb-5 pb-2"
+                    style={{ overflowX: 'auto', scrollbarWidth: 'thin' }}
+                  >
+                    {upcomingDays.map((d) => {
+                      const isSelected = selectedDate === d.iso;
+                      return (
+                        <button
+                          key={d.iso}
+                          onClick={() => d.available && setSelectedDate(d.iso)}
+                          disabled={!d.available}
+                          title={d.available ? '' : 'Doctor not available'}
+                          style={{
+                            flex: '0 0 auto',
+                            minWidth: '60px',
+                            padding: '0.5rem 0.4rem',
+                            borderRadius: '0.75rem',
+                            border: isSelected ? '2px solid #1A65D6' : '1.5px solid #e2e8f0',
+                            background: isSelected ? '#1A65D6' : (d.available ? '#fff' : '#f8fafc'),
+                            color: isSelected ? '#fff' : (d.available ? '#1E293B' : '#cbd5e1'),
+                            fontWeight: 600,
+                            cursor: d.available ? 'pointer' : 'not-allowed',
+                            transition: 'all 0.15s',
+                            textAlign: 'center',
+                            opacity: d.available ? 1 : 0.55,
+                          }}
+                        >
+                          <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {d.weekday}
+                          </div>
+                          <div style={{ fontSize: '1rem', lineHeight: 1.1, marginTop: 2 }}>{d.day}</div>
+                          <div style={{ fontSize: '0.6rem', opacity: 0.85 }}>{d.month}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Time slots */}
+                  <h3 className="font-sora font-semibold text-textDark text-sm mb-2">Select a Time Slot</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {doctor.timeSlots.map((slot) => (
                       <button
@@ -287,7 +376,7 @@ function DoctorProfile() {
                     </div>
                   )}
 
-                  {selected && (
+                  {selected && selectedDate && (
                     <button
                       onClick={handleConfirm}
                       disabled={bookingLoading}
@@ -296,6 +385,9 @@ function DoctorProfile() {
                     >
                       {bookingLoading ? <><span className="spinner" /> Booking…</> : 'Confirm Booking'}
                     </button>
+                  )}
+                  {!selectedDate && (
+                    <p className="mt-3 text-center text-xs text-textMuted">Pick a day to continue</p>
                   )}
                 </div>
               )}
