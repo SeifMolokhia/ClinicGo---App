@@ -64,13 +64,13 @@ npm run dev    # auto-reloads with nodemon
 npm start      # plain node
 ```
 
-Server starts on `http://localhost:5000` by default.
+Server starts on `http://localhost:4000` by default.
 
 ---
 
 ## API Reference
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:4000/api`
 
 ### Auth
 
@@ -122,26 +122,26 @@ The token is returned by `POST /auth/register` and `POST /auth/login`.
 
 ```bash
 # Register
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST http://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"Jane","email":"jane@example.com","password":"secret123"}'
 
 # Login
-TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"jane@example.com","password":"secret123"}' | jq -r .token)
 
 # List doctors
-curl http://localhost:5000/api/doctors
+curl http://localhost:4000/api/doctors
 
 # Book an appointment
-curl -X POST http://localhost:5000/api/appointments \
+curl -X POST http://localhost:4000/api/appointments \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"doctorId":"<id-from-doctors-list>","date":"2026-05-20","timeSlot":"10:00 AM"}'
 
 # List my appointments
-curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/appointments
+curl -H "Authorization: Bearer $TOKEN" http://localhost:4000/api/appointments
 ```
 
 ---
