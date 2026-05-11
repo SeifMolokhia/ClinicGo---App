@@ -5,8 +5,13 @@
 // ============================================================
 
 (function () {
-  // Backend base URL — adjust if your server runs elsewhere
-  window.API_BASE = 'http://localhost:4000/api';
+  // Backend base URL — use localhost during dev, Railway in production.
+  // The check is based on hostname so the deployed site (GitHub Pages,
+  // custom domain, etc.) always hits the live backend.
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  window.API_BASE = isLocal
+    ? 'http://localhost:4000/api'
+    : 'https://clinicgo-app-production.up.railway.app/api';
 
   const TOKEN_KEY = 'clinicgo_token';
   const USER_KEY  = 'clinicgo_user';
